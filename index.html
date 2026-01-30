@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Mallorca Bus Route Finder - TIB Routes</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tib-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: inline-block;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .search-section {
+            margin-bottom: 30px;
+        }
+
+        .search-label {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.2em;
+            border: 3px solid #2196F3;
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.3s;
+            -webkit-appearance: none; /* Remove iOS styling */
+            appearance: none;
+        }
+
+        .search-box:focus {
+            border-color: #1976D2;
+            box-shadow: 0 0 15px rgba(33, 150, 243, 0.4);
+        }
+
+        .suggestions {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .suggestions span {
+            background: #e3f2fd;
+            padding: 12px 18px; /* Larger touch targets */
+            border-radius: 15px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: inline-block;
+            transition: all 0.2s;
+            min-height: 44px; /* iOS touch target minimum */
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .suggestions span:hover {
+            background: #2196F3;
+            color: white;
+        }
+
+        .results {
+            margin-top: 30px;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .result-card:hover {
+            border-color: #2196F3;
+            box-shadow: 0 5px 20px rgba(33, 150, 243, 0.2);
+        }
+
+        .destination-name {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #1976D2;
+            margin-bottom: 15px;
+            word-wrap: break-word;
+        }
+
+        .bus-routes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .bus-badge {
+            background: #2196F3;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.1em;
+            min-height: 44px; /* Touch target */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .route-details {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .route-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            min-height: 44px; /* Touch target */
+        }
+
+        .info-icon {
+            font-size: 1.2em;
+            flex-shrink: 0;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 1.1em;
+        }
+
+        .info-note {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border-left: 4px solid #2196F3;
+        }
+
+        .quick-links {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .quick-links a {
+            color: #2196F3;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .quick-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .header p {
+                font-size: 1em;
+            }
+
+            .tib-badge {
+                font-size: 0.9em;
+                padding: 8px 15px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .search-label {
+                font-size: 1.1em;
+            }
+
+            .search-box {
+                font-size: 1.1em;
+                padding: 16px;
+            }
+
+            .destination-name {
+                font-size: 1.5em;
+            }
+
+            .bus-badge {
+                font-size: 1em;
+                padding: 10px 16px;
+            }
+
+            .result-card {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .destination-name {
+                font-size: 1.3em;
+            }
+
+            .route-info {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .info-icon {
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚌 Mallorca Bus Route Finder</h1>
+            <p>Find TIB bus routes to 76+ towns across Mallorca</p>
+            <div class="tib-badge">
+                <strong>From Estació Intermodal (Palma)</strong><br>
+                <small>Main transport hub - Plaça d'Espanya</small><br>
+                <small style="opacity: 0.7;">Version 3.1 - Route Fix (76 Towns)</small>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="search-section">
+                <label class="search-label" for="townSearch">
+                    Where do you want to go?
+                </label>
+                <input 
+                    type="text" 
+                    id="townSearch" 
+                    class="search-box" 
+                    placeholder="Type a town name... (e.g., Soller, Valldemossa, Alcudia - accents optional!)"
+                    autocomplete="off"
+                >
+                <div class="suggestions">
+                    <strong>Popular destinations:</strong><br>
+                    <span onclick="searchTown('Sóller')">Sóller</span>
+                    <span onclick="searchTown('Valldemossa')">Valldemossa</span>
+                    <span onclick="searchTown('Alcúdia')">Alcúdia</span>
+                    <span onclick="searchTown('Pollença')">Pollença</span>
+                    <span onclick="searchTown('Deià')">Deià</span>
+                    <span onclick="searchTown('Artà')">Artà</span>
+                    <span onclick="searchTown('Andratx')">Andratx</span>
+                    <span onclick="searchTown('Inca')">Inca</span>
+                </div>
+            </div>
+
+            <div class="results" id="results">
+                <div class="no-results">
+                    👆 Enter a town name above to find bus routes
+                </div>
+            </div>
+
+            <div class="info-note">
+                <strong>📝 How to Use:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Type any Mallorca town name in the search box</li>
+                    <li>See all bus routes from Estació Intermodal to that destination</li>
+                    <li>Get approximate journey times and frequency</li>
+                    <li>All routes start from the Intermodal Station in Palma</li>
+                </ul>
+                <br>
+                <strong>⚠️ Important:</strong> This data is based on TIB's main routes. Always verify current schedules on the official <a href="https://www.tib.org/en/inici" target="_blank">TIB website</a> before traveling. Seasonal routes and schedules may vary.
+            </div>
+
+            <div class="quick-links">
+                <strong>🔗 Useful Links:</strong><br>
+                • <a href="https://www.tib.org/en/inici" target="_blank">TIB Official Website</a> - Live schedules<br>
+                • <a href="https://www.tib.org/en/linies-i-horaris" target="_blank">TIB Route Map</a> - All routes and timetables<br>
+                • <a href="https://www.google.com/maps/place/Estaci%C3%B3+Intermodal/@39.5745,2.6520,15z" target="_blank">Intermodal Station on Google Maps</a><br>
+                • <a href="mallorca-trails-v3.2.html">Mallorca Trails & Transport</a> - Hiking trails with transport
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Comprehensive database of TIB bus routes from Intermodal Station
+        const busRoutes = {
+            // Northwest - Serra de Tramuntana
+            "Sóller": {
+                routes: ["203", "204"],
+                journeyTime: "30-40 min",
+                frequency: "Every 30-60 min",
+                notes: "Also accessible by vintage train from same station (scenic route)",
+                region: "Serra de Tramuntana",
+                highlights: "Beautiful town, orange groves, port access"
+            },
+            "Port de Sóller": {
+                routes: ["203", "204"],
+                journeyTime: "45-55 min",
+                frequency: "Every 30-60 min",
+                notes: "Coastal town with beach. Buses continue from Sóller",
+                region: "Serra de Tramuntana Coast",
+                highlights: "Beach, restaurants, boat trips"
+            },
+            "Valldemossa": {
+                routes: ["203"],
+                journeyTime: "30 min",
+                frequency: "Every 30-60 min",
+                notes: "Historic mountain village. Very popular tourist destination",
+                region: "Serra de Tramuntana",
+                highlights: "Chopin monastery, scenic mountain views"
+            },
+            "Deià": {
+                routes: ["203"],
+                journeyTime: "45 min",
+                frequency: "Limited - 3-4 times daily",
+                notes: "Small artistic village. Limited service - plan carefully!",
+                region: "Serra de Tramuntana",
+                highlights: "Artist village, Cala Deià beach access"
+            },
+            "Andratx": {
+                routes: ["100"],
+                journeyTime: "45 min",
+                frequency: "Every 30-60 min",
+                notes: "Gateway to west coast. Regular service",
+                region: "Southwest",
+                highlights: "Market town, access to Port d'Andratx"
+            },
+            "Port d'Andratx": {
+                routes: ["102"],
+                journeyTime: "60 min",
+                frequency: "Every 60-90 min",
+                notes: "Upscale marina town. Scenic coastal route",
+                region: "Southwest Coast",
+                highlights: "Marina, restaurants, hiking trails"
+            },
+            "Estellencs": {
+                routes: ["100"],
+                journeyTime: "60 min",
+                frequency: "3-5 times daily",
+                notes: "Small mountain village on west coast. Limited service",
+                region: "Serra de Tramuntana",
+                highlights: "Traditional village, mountain scenery"
+            },
+            "Banyalbufar": {
+                routes: ["100"],
+                journeyTime: "50 min",
+                frequency: "3-5 times daily",
+                notes: "Terraced hillside village. Limited service",
+                region: "Serra de Tramuntana Coast",
+                highlights: "Ancient terraces, small cove"
+            },
+
+            // North
+            "Pollença": {
+                routes: ["301"],
+                journeyTime: "50 min",
+                frequency: "Every 30-60 min",
+                notes: "Historic town. Good connections. Gateway to Formentor",
+                region: "North",
+                highlights: "Roman bridge, Sunday market, historic center"
+            },
+            "Port de Pollença": {
+                routes: ["301", "340"],
+                journeyTime: "60 min",
+                frequency: "Every 30-60 min",
+                notes: "Beach resort. Continues from Pollença. Well connected",
+                region: "North Coast",
+                highlights: "Beach, watersports, restaurants"
+            },
+            "Alcúdia": {
+                routes: ["302", "351"],
+                journeyTime: "50-60 min",
+                frequency: "Every 20-30 min (frequent)",
+                notes: "Major hub. Historic walled town. Very frequent service",
+                region: "Northeast",
+                highlights: "Walled old town, market, beach access"
+            },
+            "Port d'Alcúdia": {
+                routes: ["302", "351"],
+                journeyTime: "60 min",
+                frequency: "Every 20-30 min",
+                notes: "Major beach resort. Excellent connections",
+                region: "Northeast Coast",
+                highlights: "Long beach, marina, tourist facilities"
+            },
+            "Can Picafort": {
+                routes: ["302", "351"],
+                journeyTime: "70 min",
+                frequency: "Every 30-60 min",
+                notes: "Beach resort on north coast. Extends from Alcúdia route",
+                region: "North Coast",
+                highlights: "Beach, resorts, S'Albufera wetlands nearby"
+            },
+
+            // East
+            "Artà": {
+                routes: ["325", "411", "421"],
+                journeyTime: "90 min",
+                frequency: "Every 60-90 min",
+                notes: "Eastern town with castle. Via Manacor. Long journey",
+                region: "East",
+                highlights: "Hilltop sanctuary, caves nearby, market town"
+            },
+            "Cala Rajada": {
+                routes: ["325", "411", "422", "423", "424"],
+                journeyTime: "110 min",
+                frequency: "3-5 times daily",
+                notes: "East coast resort. Long journey via Manacor and Artà",
+                region: "Northeast Coast",
+                highlights: "Beach, lighthouse, marina"
+            },
+            "Manacor": {
+                routes: ["401", "411", "412", "416", "417", "501"],
+                journeyTime: "60 min",
+                frequency: "Every 30-60 min",
+                notes: "Second largest city. Good connections. Pearl factory tours",
+                region: "East Central",
+                highlights: "Shopping, pearl factories, gateway to east coast"
+            },
+            "Porto Cristo": {
+                routes: ["401", "424", "425", "427", "428"],
+                journeyTime: "75 min",
+                frequency: "Every 60-90 min",
+                notes: "East coast town. Via Manacor. Drach Caves nearby",
+                region: "East Coast",
+                highlights: "Natural harbor, Drach caves, beach"
+            },
+
+            // Central
+            "Inca": {
+                routes: ["302", "313", "314", "315", "320"],
+                journeyTime: "30 min",
+                frequency: "Every 15-30 min (very frequent)",
+                notes: "Major central hub. Excellent connections. Thursday market famous",
+                region: "Central",
+                highlights: "Leather shops, market, transport hub"
+            },
+            "Lluc": {
+                routes: ["231", "312"],
+                journeyTime: "60 min",
+                frequency: "Every 60-90 min",
+                notes: "Mountain monastery. Limited Sunday service. Hiking hub",
+                region: "Serra de Tramuntana",
+                highlights: "Monastery, mountain hiking trails"
+            },
+            "Sineu": {
+                routes: ["321", "442"],
+                journeyTime: "40 min",
+                frequency: "Every 60-90 min",
+                notes: "Central market town. Wednesday market is major attraction",
+                region: "Central",
+                highlights: "Traditional market, agricultural center"
+            },
+
+            // South / Southwest Coast
+            "Calvià": {
+                routes: ["107"],
+                journeyTime: "25 min",
+                frequency: "Every 30-60 min",
+                notes: "Gateway to southwest beaches and Galatzó mountain",
+                region: "Southwest",
+                highlights: "Access to beaches, mountain hiking"
+            },
+            "Santa Ponça": {
+                routes: ["102", "103", "104", "106"],
+                journeyTime: "30 min",
+                frequency: "Every 30 min",
+                notes: "Major beach resort. Very frequent service",
+                region: "Southwest Coast",
+                highlights: "Beach, marina, golf courses"
+            },
+            "Peguera": {
+                routes: ["102", "104"],
+                journeyTime: "45 min",
+                frequency: "Every 30-60 min",
+                notes: "Beach resort west of Palma. Good connections",
+                region: "Southwest Coast",
+                highlights: "Beaches, coastal walks"
+            },
+            "Magaluf": {
+                routes: ["104"],
+                journeyTime: "35 min",
+                frequency: "Every 20-30 min (very frequent)",
+                notes: "Major tourist resort. Excellent connections",
+                region: "Southwest Coast",
+                highlights: "Beach, nightlife, tourist facilities"
+            },
+            "Palma Nova": {
+                routes: ["104", "106"],
+                journeyTime: "30 min",
+                frequency: "Every 20-30 min",
+                notes: "Beach resort next to Magaluf. Very frequent service",
+                region: "Southwest Coast",
+                highlights: "Beaches, family-friendly resort"
+            },
+
+            // Airport
+            "Airport": {
+                routes: ["A1", "A2"],
+                journeyTime: "20 min",
+                frequency: "Every 15 min",
+                notes: "EMT buses (not TIB) - direct from Intermodal to airport. Very frequent",
+                region: "South Palma",
+                highlights: "Palma Airport - Son Sant Joan"
+            },
+
+            // South
+            "Llucmajor": {
+                routes: ["101", "508", "519"],
+                journeyTime: "40 min",
+                frequency: "Every 60 min",
+                notes: "Southern town. Market on Wednesdays and Sundays",
+                region: "South",
+                highlights: "Market town, access to south coast"
+            },
+            "Campos": {
+                routes: ["501", "515", "516", "517", "518", "A51"],
+                journeyTime: "50 min",
+                frequency: "Every 60-90 min",
+                notes: "Southern agricultural town. Access to south beaches",
+                region: "South",
+                highlights: "Rural town, access to pristine beaches"
+            },
+            "Santanyí": {
+                routes: ["515", "516", "517"],
+                journeyTime: "70 min",
+                frequency: "Every 60-90 min",
+                notes: "Southeast town. Access to beautiful coves",
+                region: "Southeast",
+                highlights: "Art galleries, access to Cala Santanyí"
+            },
+            "Felanitx": {
+                routes: ["501", "512", "514"],
+                journeyTime: "60 min",
+                frequency: "Every 60 min",
+                notes: "Eastern town with castle. Sunday market",
+                region: "East",
+                highlights: "Market, Castell de Santueri nearby"
+            },
+            "Bunyola": {
+                routes: ["205"],
+                journeyTime: "40 min",
+                frequency: "Every 60-90 min",
+                notes: "Mountain town on Soller train line",
+                region: "Central Tramuntana",
+                highlights: "Traditional village"
+            },
+            "Binissalem": {
+                routes: ["320"],
+                journeyTime: "25 min",
+                frequency: "Every 30-60 min",
+                notes: "Wine region town. Train available",
+                region: "Central",
+                highlights: "Wineries, wine tasting"
+            },
+            "Lloseta": {
+                routes: ["320"],
+                journeyTime: "28 min",
+                frequency: "Every 30-60 min",
+                notes: "Small town near Inca. Train available",
+                region: "Central",
+                highlights: "Shoe factories, train"
+            },
+            "Santa Maria": {
+                routes: ["320"],
+                journeyTime: "20 min",
+                frequency: "Every 30-60 min",
+                notes: "Central town with Sunday market",
+                region: "Central",
+                highlights: "Sunday market, wineries"
+            },
+            "Consell": {
+                routes: ["320", "342"],
+                journeyTime: "25 min",
+                frequency: "Every 60 min",
+                notes: "Small central town. Railway junction",
+                region: "Central",
+                highlights: "Train station, quiet"
+            },
+            "Algaida": {
+                routes: ["401", "432"],
+                journeyTime: "30 min",
+                frequency: "Every 60-90 min",
+                notes: "Central town on Manacor route",
+                region: "Central",
+                highlights: "Randa mountain, traditional"
+            },
+            "Petra": {
+                routes: ["413"],
+                journeyTime: "55 min",
+                frequency: "Every 60-90 min",
+                notes: "Historic town, birthplace of Serra",
+                region: "Central East",
+                highlights: "Museum, historic center"
+            },
+            "Muro": {
+                routes: ["312", "315", "320"],
+                journeyTime: "50 min",
+                frequency: "Every 60-90 min",
+                notes: "Central north town. Beach access",
+                region: "North",
+                highlights: "Traditional town, market"
+            },
+            "Sa Pobla": {
+                routes: ["302", "314", "315", "320"],
+                journeyTime: "45 min",
+                frequency: "Every 30-60 min",
+                notes: "Agricultural town in the north",
+                region: "North",
+                highlights: "Market, agricultural center"
+            },
+            "Cala Millor": {
+                routes: ["401"],
+                journeyTime: "85 min",
+                frequency: "Every 60-90 min",
+                notes: "Major east coast resort",
+                region: "East Coast",
+                highlights: "Long beach, resorts"
+            },
+            "Son Servera": {
+                routes: ["412", "424"],
+                journeyTime: "85 min",
+                frequency: "Every 60-90 min",
+                notes: "Inland town near coast resorts",
+                region: "East",
+                highlights: "Traditional town, church"
+            },
+            "Capdepera": {
+                routes: ["441"],
+                journeyTime: "105 min",
+                frequency: "3-5 times daily",
+                notes: "Historic town with castle",
+                region: "Northeast",
+                highlights: "Medieval castle, market"
+            },
+            "Ses Salines": {
+                routes: ["517"],
+                journeyTime: "75 min",
+                frequency: "Every 60-90 min",
+                notes: "South coast town near salt flats",
+                region: "South",
+                highlights: "Salt flats, Es Trenc beach"
+            },
+            "Colonia de Sant Jordi": {
+                routes: ["517"],
+                journeyTime: "80 min",
+                frequency: "Every 60-90 min",
+                notes: "South coast resort near Es Trenc",
+                region: "South Coast",
+                highlights: "Beach, harbor, Cabrera boat"
+            },
+            "Illetes": {
+                routes: ["106"],
+                journeyTime: "25 min",
+                frequency: "Every 20-30 min",
+                notes: "Upscale beach area west of Palma",
+                region: "West Palma Coast",
+                highlights: "Beach, upscale area"
+            },
+            "Bendinat": {
+                routes: ["106"],
+                journeyTime: "22 min",
+                frequency: "Every 20-30 min",
+                notes: "Upscale residential near Palma",
+                region: "West Palma",
+                highlights: "Residential, golf"
+            },
+            "Portals Nous": {
+                routes: ["104", "106"],
+                journeyTime: "26 min",
+                frequency: "Every 20-30 min",
+                notes: "Upscale marina area",
+                region: "Southwest",
+                highlights: "Puerto Portals marina"
+            },
+            "Sol de Mallorca": {
+                routes: ["105"],
+                journeyTime: "40 min",
+                frequency: "Every 30-60 min",
+                notes: "Small resort west of Magaluf",
+                region: "Southwest Coast",
+                highlights: "Beach, residential"
+            },
+            "Cala Vinyes": {
+                routes: ["105"],
+                journeyTime: "38 min",
+                frequency: "Every 30-60 min",
+                notes: "Small cove near Magaluf",
+                region: "Southwest Coast",
+                highlights: "Small beach, residential"
+            },
+            "El Toro": {
+                routes: ["106"],
+                journeyTime: "32 min",
+                frequency: "Every 30 min",
+                notes: "Small marina, Port Adriano",
+                region: "Southwest Coast",
+                highlights: "Port Adriano marina"
+            },
+            "Costa de la Calma": {
+                routes: ["103", "107"],
+                journeyTime: "35 min",
+                frequency: "Every 30-60 min",
+                notes: "Residential beach near Santa Ponca",
+                region: "Southwest Coast",
+                highlights: "Beach, residential"
+            },
+            "Marratxi": {
+                routes: ["320", "341"],
+                journeyTime: "15 min",
+                frequency: "Every 20-30 min",
+                notes: "Large municipality near Palma",
+                region: "Near Palma",
+                highlights: "Pottery workshops"
+            },
+            "Montuiri": {
+                routes: ["401"],
+                journeyTime: "45 min",
+                frequency: "Every 60-90 min",
+                notes: "Central hilltop town",
+                region: "Central East",
+                highlights: "Windmills, hilltop views"
+            },
+            "Vilafranca": {
+                routes: ["321", "401", "442"],
+                journeyTime: "50 min",
+                frequency: "Every 60-90 min",
+                notes: "Small town on Manacor route",
+                region: "Central East",
+                highlights: "Agricultural town"
+            },
+            "Sencelles": {
+                routes: ["322"],
+                journeyTime: "35 min",
+                frequency: "3-5 times daily",
+                notes: "Small central village. Limited",
+                region: "Central",
+                highlights: "Rural village, traditional"
+            },
+            "Sa Coma": {
+                routes: ["401", "424", "425"],
+                journeyTime: "80 min",
+                frequency: "Every 60-90 min",
+                notes: "Beach resort next to Cala Millor",
+                region: "East Coast",
+                highlights: "Beach, family-friendly"
+            },
+            "Cala Bona": {
+                routes: ["401", "424", "425"],
+                journeyTime: "87 min",
+                frequency: "Every 60-90 min",
+                notes: "Small fishing village and resort",
+                region: "East Coast",
+                highlights: "Harbor, fishing"
+            },
+            "Esporles": {
+                routes: ["200"],
+                journeyTime: "35 min",
+                frequency: "Every 60-90 min",
+                notes: "Mountain town on west route",
+                region: "Serra de Tramuntana",
+                highlights: "Traditional village"
+            },
+            "Fornalutx": {
+                routes: ["212"],
+                journeyTime: "50 min",
+                frequency: "Limited - 3-4 times daily",
+                notes: "Beautiful mountain village",
+                region: "Serra de Tramuntana",
+                highlights: "Prettiest village"
+            },
+            "Orient": {
+                routes: ["331"],
+                journeyTime: "50 min",
+                frequency: "Very limited - 2-3 times daily",
+                notes: "Tiny mountain village",
+                region: "Serra de Tramuntana",
+                highlights: "Remote valley, hiking"
+            },
+            "Campanet": {
+                routes: ["314"],
+                journeyTime: "50 min",
+                frequency: "3-5 times daily",
+                notes: "Small north town. Caves nearby",
+                region: "North",
+                highlights: "Campanet caves"
+            },
+            "S Arenal": {
+                routes: ["A51", "501"],
+                journeyTime: "25 min",
+                frequency: "Every 30 min",
+                notes: "Major beach resort near airport",
+                region: "South Palma",
+                highlights: "Long beach, nightlife"
+            },
+            "Portopetro": {
+                routes: ["515"],
+                journeyTime: "85 min",
+                frequency: "Every 60-90 min",
+                notes: "Small fishing village southeast",
+                region: "Southeast Coast",
+                highlights: "Natural harbor"
+            },
+            "S Alqueria Blanca": {
+                routes: ["515"],
+                journeyTime: "80 min",
+                frequency: "Every 60-90 min",
+                notes: "Inland village near Santanyi",
+                region: "Southeast",
+                highlights: "Traditional village"
+            },
+            "Cala d Or": {
+                routes: ["515"],
+                journeyTime: "90 min",
+                frequency: "Every 60-90 min",
+                notes: "Upscale southeast coast resort",
+                region: "Southeast Coast",
+                highlights: "Coves, marina, upscale"
+            },
+            "Cas Catala": {
+                routes: ["106"],
+                journeyTime: "20 min",
+                frequency: "Every 20-30 min",
+                notes: "Suburb between Palma and Illetes",
+                region: "West Palma",
+                highlights: "Residential, beach"
+            },
+            "Cala Major": {
+                routes: ["106"],
+                journeyTime: "18 min",
+                frequency: "Every 20-30 min",
+                notes: "Beach area in western Palma",
+                region: "West Palma",
+                highlights: "Beach, Marivent Palace"
+            },
+            "Santa Eugenia": {
+                routes: ["322"],
+                journeyTime: "30 min",
+                frequency: "3-5 times daily",
+                notes: "Small village near Palma",
+                region: "Central",
+                highlights: "Quiet village"
+            },
+            "Costitx": {
+                routes: ["322"],
+                journeyTime: "38 min",
+                frequency: "3-5 times daily",
+                notes: "Tiny central village",
+                region: "Central",
+                highlights: "Observatory, rural"
+            },
+            "Portol": {
+                routes: ["341"],
+                journeyTime: "20 min",
+                frequency: "Every 60 min",
+                notes: "Village in Marratxi. Pottery",
+                region: "Near Palma",
+                highlights: "Traditional pottery"
+            },
+            "Buger": {
+                routes: ["314"],
+                journeyTime: "48 min",
+                frequency: "3-5 times daily",
+                notes: "Tiny north village",
+                region: "North",
+                highlights: "Small agricultural village"
+            },
+            "Alaro": {
+                routes: ["331", "342"],
+                journeyTime: "35 min",
+                frequency: "Every 60 min",
+                notes: "Central town with famous castle",
+                region: "Central",
+                highlights: "Castell d Alaro hike"
+            },
+            "Son Caliu": {
+                routes: ["104", "106"],
+                journeyTime: "30 min",
+                frequency: "Every 20-30 min",
+                notes: "Area between Portals and Palmanova",
+                region: "Southwest",
+                highlights: "Residential, beach"
+            },
+            "Camp de Mar": {
+                routes: ["102"],
+                journeyTime: "55 min",
+                frequency: "Every 60-90 min",
+                notes: "Small beach near Andratx",
+                region: "Southwest Coast",
+                highlights: "Beach, golf, quiet"
+            },
+            "S Illot": {
+                routes: ["401", "424", "425"],
+                journeyTime: "78 min",
+                frequency: "Every 60-90 min",
+                notes: "Small resort between towns",
+                region: "East Coast",
+                highlights: "Beach, quiet resort"
+            },
+            "Colonia de Sant Pere": {
+                routes: ["421"],
+                journeyTime: "80 min",
+                frequency: "3-5 times daily",
+                notes: "Small fishing village northeast",
+                region: "Northeast Coast",
+                highlights: "Beach, quiet fishing"
+            }
+        };
+
+        // Search functionality
+        let searchTimeout;
+        document.getElementById('townSearch').addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const searchTerm = e.target.value.trim();
+                if (searchTerm.length >= 2) {
+                    performSearch(searchTerm);
+                } else if (searchTerm.length === 0) {
+                    showNoResults();
+                }
+            }, 300);
+        });
+
+        // Handle Enter key
+        document.getElementById('townSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const searchTerm = e.target.value.trim();
+                if (searchTerm.length >= 2) {
+                    performSearch(searchTerm);
+                }
+            }
+        });
+
+        function searchTown(townName) {
+            document.getElementById('townSearch').value = townName;
+            performSearch(townName);
+        }
+
+        // Function to remove accents for searching
+        function removeAccents(str) {
+            return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function performSearch(searchTerm) {
+            const results = document.getElementById('results');
+            const lowerSearch = removeAccents(searchTerm.toLowerCase());
+            
+            // Find matching towns
+            const matches = [];
+            for (const [town, data] of Object.entries(busRoutes)) {
+                const townLower = removeAccents(town.toLowerCase());
+                if (townLower.includes(lowerSearch)) {
+                    matches.push({ 
+                        town, 
+                        data, 
+                        exactMatch: townLower === lowerSearch 
+                    });
+                }
+            }
+
+            // Sort: exact matches first, then alphabetically
+            matches.sort((a, b) => {
+                if (a.exactMatch && !b.exactMatch) return -1;
+                if (!a.exactMatch && b.exactMatch) return 1;
+                return a.town.localeCompare(b.town);
+            });
+
+            if (matches.length === 0) {
+                results.innerHTML = `
+                    <div class="no-results">
+                        <p style="font-size: 2em; margin-bottom: 10px;">🔍</p>
+                        <p>No routes found for "<strong>${searchTerm}</strong>"</p>
+                        <p style="margin-top: 15px; font-size: 0.95em;">Try searching for: Soller, Valldemossa, Alcudia, Pollenca, Inca, Deia, or Andratx</p>
+                        <p style="margin-top: 10px; font-size: 0.9em; color: #999;">(You can type with or without accents - we'll find it!)</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Display results
+            results.innerHTML = matches.map(({ town, data }) => `
+                <div class="result-card">
+                    <div class="destination-name">${town}</div>
+                    
+                    <div style="color: #666; margin-bottom: 10px;">
+                        <strong>Region:</strong> ${data.region}
+                    </div>
+
+                    <div style="background: #e3f2fd; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                        <strong>🚌 Bus Routes from Intermodal Station:</strong>
+                        <div class="bus-routes">
+                            ${data.routes.map(route => `<span class="bus-badge">${route}</span>`).join('')}
+                        </div>
+                    </div>
+
+                    <div class="route-details">
+                        <div class="route-info">
+                            <span class="info-icon">⏱️</span>
+                            <div>
+                                <strong>Journey Time:</strong> ${data.journeyTime}
+                            </div>
+                        </div>
+                        
+                        <div class="route-info">
+                            <span class="info-icon">🔄</span>
+                            <div>
+                                <strong>Frequency:</strong> ${data.frequency}
+                            </div>
+                        </div>
+
+                        ${data.highlights ? `
+                        <div class="route-info">
+                            <span class="info-icon">✨</span>
+                            <div>
+                                <strong>Highlights:</strong> ${data.highlights}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <div class="route-info" style="background: #fff3cd;">
+                            <span class="info-icon">ℹ️</span>
+                            <div>
+                                <strong>Notes:</strong> ${data.notes}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 15px; padding: 20px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-radius: 12px; border-left: 5px solid #2196F3;">
+                        <div style="font-size: 1.4em; font-weight: bold; color: #1976D2; margin-bottom: 15px;">
+                            🚌 Take These Buses:
+                        </div>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px;">
+                            ${data.routes.map(route => `
+                                <div style="background: #2196F3; color: white; padding: 15px 25px; border-radius: 15px; font-size: 1.8em; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                                    ${route}
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 10px; margin-top: 15px;">
+                            <div style="font-size: 1.1em; margin-bottom: 8px;"><strong>📞 Need Help?</strong></div>
+                            <div style="color: #666; line-height: 1.6;">
+                                • Call TIB: <strong style="color: #2196F3; font-size: 1.2em;">+34 971 17 77 77</strong><br>
+                                • Visit: <a href="https://www.tib.org/en/linies-i-horaris" target="_blank" style="color: #2196F3; font-weight: bold;">TIB Website</a> and search for route ${data.routes[0]}<br>
+                                • Use Moovit app: Search "Intermodal" → "${town}"
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showNoResults() {
+            document.getElementById('results').innerHTML = `
+                <div class="no-results">
+                    👆 Enter a town name above to find bus routes
+                </div>
+            `;
+        }
+
+        // Initialize
+        showNoResults();
+    </script>
+</body>
+</html>
